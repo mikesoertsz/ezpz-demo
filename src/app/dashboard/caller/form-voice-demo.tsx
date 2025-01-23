@@ -1,6 +1,8 @@
 "use client";
 
+import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -22,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"; // Import Select components
 import { Separator } from "@/components/ui/separator";
-import { PhoneOutgoing } from "lucide-react";
+import { LoaderCircle, PhoneOutgoing } from "lucide-react";
 
 // Array of options to preload the form
 const demoOptions = [
@@ -40,6 +42,9 @@ const formSchema = z.object({
 });
 
 export function FormVoiceDemo() {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,10 +52,84 @@ export function FormVoiceDemo() {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    const headers = {
+      authorization: process.env.BLAND_API_KEY || "",
+      "Content-Type": "application/json",
+    };
+
+    const data = {
+      phone_number: values.phoneNumber,
+      pathway_id: "910b8c10-57fc-4f3c-bafc-c4a7ea3bbcdc",
+      task: "",
+      voice: "2c5f8cc1-5a86-4551-b143-959b53a8d2ba",
+      background_track: "office",
+      first_sentence: "",
+      wait_for_greeting: true,
+      block_interruptions: true,
+      interruption_threshold: 123,
+      model: "turbo",
+      temperature: 123,
+      keywords: [""],
+      pronunciation_guide: [{}],
+      transfer_phone_number: "",
+      transfer_list: {},
+      language: "en",
+      pathway_version: 123,
+      local_dialing: true,
+      voicemail_sms: true,
+      dispatch_hours: {},
+      sensitive_voicemail_detection: true,
+      noise_cancellation: true,
+      ignore_button_press: true,
+      language_detection_period: 123,
+      language_detection_options: [""],
+      timezone: "",
+      request_data: {
+        name: values.name,
+        contact: values.phoneNumber,
+      },
+      tools: [{}],
+      start_time: "",
+      voicemail_message: "",
+      voicemail_action: {},
+      retry: {},
+      max_duration: 123,
+      record: true,
+      from: "+14155322237",
+      webhook: "",
+      webhook_events: [""],
+      metadata: {},
+      analysis_preset: "",
+    };
+
+    const options = {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(data),
+    };
+
+    try {
+      const response = await fetch("https://api.bland.ai/v1/calls", options);
+      const result = await response.json();
+      if (result.status === "success") {
+        toast({
+          title: "Scheduled: Catch up",
+          description: "Call successfully queued.",
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error initiating call:", error);
+      toast({
+        title: "Failed to initiate call",
+        description: (error as Error).message || "Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // 3. Handle selection change
@@ -113,9 +192,16 @@ export function FormVoiceDemo() {
             <Button
               type="submit"
               className="w-full flex gap-2 items-center justify-center"
+              disabled={isSubmitting}
             >
-              Run Demo
-              <PhoneOutgoing className="w-3 h-3" size={12} />
+              {isSubmitting ? (
+                <LoaderCircle className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  Run Demo
+                  <PhoneOutgoing className="w-3 h-3" size={12} />
+                </>
+              )}
             </Button>
           </div>
         </form>
