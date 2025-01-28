@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -62,84 +63,72 @@ export function FormVoiceDemo() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const headers = {
-      authorization: process.env.BLAND_API_KEY || "",
+      Authorization: process.env.BLAND_API_KEY || "",
+      "x-bland-org-id": "13bd3e2f-0df8-417f-80ab-07e6a75ecbd3",
       "Content-Type": "application/json",
     };
 
     const data = {
       phone_number: values.phoneNumber,
-      pathway_id: "910b8c10-57fc-4f3c-bafc-c4a7ea3bbcdc",
+      from: "+14155322237",
       task: "",
-      voice: "2c5f8cc1-5a86-4551-b143-959b53a8d2ba",
-      background_track: "office",
-      first_sentence: "",
-      wait_for_greeting: true,
-      block_interruptions: true,
-      interruption_threshold: 123,
       model: "turbo",
+      language: "en",
+      voice: "2c5f8cc1-5a86-4551-b143-959b53a8d2ba",
+      voice_settings: {},
+      pathway_id: "910b8c10-57fc-4f3c-bafc-c4a7ea3bbcdc",
+      local_dialing: true,
+      max_duration: 123,
+      answered_by_enabled: false,
+      wait_for_greeting: true,
+      noise_cancellation: true,
+      record: true,
+      amd: false,
+      interruption_threshold: 123,
+      voicemail_message: "",
       temperature: 123,
-      keywords: [""],
-      pronunciation_guide: [{}],
       transfer_phone_number: "",
       transfer_list: {},
-      language: "en",
-      pathway_version: 123,
-      local_dialing: true,
-      voicemail_sms: true,
-      dispatch_hours: {},
-      sensitive_voicemail_detection: true,
-      noise_cancellation: true,
-      ignore_button_press: true,
-      language_detection_period: 123,
-      language_detection_options: [""],
-      timezone: "",
+      metadata: {},
+      pronunciation_guide: [{}],
+      start_time: "",
+      background_track: "office",
       request_data: {
         name: values.name,
         contact: values.phoneNumber,
         company: values.companyName,
       },
       tools: [{}],
-      start_time: "",
-      voicemail_message: "",
-      voicemail_action: {},
-      retry: {},
-      max_duration: 123,
-      record: true,
-      from: "+14155322237",
-      webhook: "",
-      webhook_events: [""],
-      metadata: {},
+      dynamic_data: [],
       analysis_preset: "",
+      analysis_schema: {},
+      webhook: "",
+      calendly: {},
+      timezone: "",
     };
 
-    const options = {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(data),
-    };
-
-    fetch("https://api.bland.ai/v1/calls", options)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.status === "success") {
-          toast({
-            title: "Scheduled: Catch up",
-            description: "Call successfully queued.",
-          });
-        } else {
-          throw new Error(result.message);
-        }
-      })
-      .catch((error) => {
-        console.error("Error initiating call:", error);
-        toast({
-          title: "Failed to initiate call",
-          description: error.message || "Please try again later.",
-        });
-      })
-      .finally(() => {
-        setIsSubmitting(false);
+    try {
+      const response = await axios.post("https://api.bland.ai/v1/calls", data, {
+        headers,
       });
+      const result = response.data;
+      if (result.status === "success") {
+        toast({
+          title: "Scheduled: Catch up",
+          description: "Call successfully queued.",
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error initiating call:", error);
+      toast({
+        title: "Failed to initiate call",
+        description: (error as Error).message || "Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // 3. Handle selection change
