@@ -28,8 +28,12 @@ import { LoaderCircle, PhoneOutgoing } from "lucide-react";
 
 // Array of options to preload the form
 const demoOptions = [
-  { name: "Mike", phoneNumber: "+351912580952" },
-  { name: "Jordi", phoneNumber: "+31641532184" },
+  { name: "Mike", phoneNumber: "+351912580952", companyName: "Drifter" },
+  {
+    name: "Jordi",
+    phoneNumber: "+31641532184",
+    companyName: "E.Z.P.Z Recruitment",
+  },
 ];
 
 const formSchema = z.object({
@@ -38,6 +42,9 @@ const formSchema = z.object({
   }),
   phoneNumber: z.string().min(10, {
     message: "Phone number must be at least 10 characters.",
+  }),
+  companyName: z.string().min(2, {
+    message: "Company name must be at least 2 characters.",
   }),
 });
 
@@ -89,6 +96,7 @@ export function FormVoiceDemo() {
       request_data: {
         name: values.name,
         contact: values.phoneNumber,
+        company: values.companyName,
       },
       tools: [{}],
       start_time: "",
@@ -110,26 +118,28 @@ export function FormVoiceDemo() {
       body: JSON.stringify(data),
     };
 
-    try {
-      const response = await fetch("https://api.bland.ai/v1/calls", options);
-      const result = await response.json();
-      if (result.status === "success") {
+    fetch("https://api.bland.ai/v1/calls", options)
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.status === "success") {
+          toast({
+            title: "Scheduled: Catch up",
+            description: "Call successfully queued.",
+          });
+        } else {
+          throw new Error(result.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error initiating call:", error);
         toast({
-          title: "Scheduled: Catch up",
-          description: "Call successfully queued.",
+          title: "Failed to initiate call",
+          description: error.message || "Please try again later.",
         });
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (error) {
-      console.error("Error initiating call:", error);
-      toast({
-        title: "Failed to initiate call",
-        description: (error as Error).message || "Please try again later.",
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   // 3. Handle selection change
@@ -181,6 +191,21 @@ export function FormVoiceDemo() {
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <Input placeholder="+351912580952" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex gap-6 p-6 py-2 bg-slate-50">
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Company A" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
