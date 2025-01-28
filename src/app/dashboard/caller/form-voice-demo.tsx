@@ -64,8 +64,7 @@ export function FormVoiceDemo() {
     setIsSubmitting(true);
     const headers = {
       Authorization: process.env.BLAND_API_KEY || "",
-      "x-bland-org-id": "13bd3e2f-0df8-417f-80ab-07e6a75ecbd3",
-      "Content-Type": "application/json",
+      "x-bland-org-id": process.env.BLAND_ORG_ID || "",
     };
 
     const data = {
