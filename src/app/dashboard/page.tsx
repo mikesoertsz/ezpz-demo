@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { EzpzForm } from "@/components/EzpzForm";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,7 +12,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { FormVoiceDemo } from "./caller/form-voice-demo";
 
 export default function Page() {
   return (
@@ -30,7 +30,7 @@ export default function Page() {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 bg-slate-50">
-          <FormVoiceDemo />
+          <EzpzForm />
         </div>
       </SidebarInset>
     </SidebarProvider>
